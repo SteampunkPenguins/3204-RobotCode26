@@ -41,6 +41,7 @@ import frc.robot.subsystems.Index;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.IntakeArm;
 import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.Vision;
 
 public class RobotContainer {
 
@@ -70,6 +71,7 @@ public class RobotContainer {
         public final Intake intake = Intake.getInstance();
         public final Shooter shooter = Shooter.getInstance();
         public final Index index = Index.getInstance();
+        public final Vision vision = new Vision(m_robotDrive);
 
         //---------- Selectable Auto Chooser Construction ----------//
         //Only one chooser should be used/uncommented since it will mess up on the Smart Dashboard

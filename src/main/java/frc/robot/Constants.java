@@ -29,4 +29,15 @@ public class Constants {
         //ID of the Index Motor
         public static final int kIntakeIndexMotor = 20;
     }
+
+    public static class Vision{
+        //Must match the name set in the Limelight web UI (http://limelight.local:5801)
+        public static final String kLimelightName = "limelight";
+
+        //Ignore vision while the robot spins faster than this
+        public static final double kMaxYawRateDegPerSec = 720;
+
+        //How much to trust vision X/Y (meters). Bigger = trust it less.
+        public static final double kXYStdDev = 0.7;
+    }
 }
