@@ -33,6 +33,7 @@ import frc.robot.commands.AutoCommands;
 import frc.robot.commands.AutoLeftStartScoring;
 import frc.robot.commands.blueRightShoot;
 import frc.robot.commands.middleAuto;
+import frc.robot.commands.VisionCenterAuto;
 
 import frc.robot.generated.TunerConstants;
 
@@ -111,6 +112,9 @@ public class RobotContainer {
                 m_autoChooserPathPlanner.addOption("use this one blue left/red right", new AutoLeftStartScoring());
                 m_autoChooserPathPlanner.addOption("use for blue right/red left (shooting)", new blueRightShoot());
                 m_autoChooserPathPlanner.addOption("USE FOR MIDDLE START", new middleAuto());
+
+                //Vision Auto -> uses AprilTags to find the robot, drives to field center, turns around
+                m_autoChooserPathPlanner.addOption("Vision: Center + Turn Around", new VisionCenterAuto(m_robotDrive, vision));
                 
         }
 

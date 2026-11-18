@@ -14,11 +14,15 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Index;
+import frc.robot.sim.LimelightSim;
 
 public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
 
     private final RobotContainer m_robotContainer;
+
+    /* Only created when running in the simulator */
+    private LimelightSim m_limelightSim;
 
     /* log and replay timestamp and joystick data */
     private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
@@ -109,5 +113,13 @@ public class Robot extends TimedRobot {
     public void testExit() {}
 
     @Override
-    public void simulationPeriodic() {}
+    public void simulationInit() {
+        m_limelightSim = new LimelightSim();
+    }
+
+    @Override
+    public void simulationPeriodic() {
+        // Fake Limelight: publishes what the camera would see from the sim robot's position
+        m_limelightSim.update(m_robotContainer.m_robotDrive.getState().Pose);
+    }
 }

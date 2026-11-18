@@ -1,0 +1,16 @@
+# Gradle / build output
+.gradle/
+build/
+bin/
+
+# Simulator output (generated every run)
+ctre_sim/
+logs/
+networktables.json
+simgui-window.json
+simgui.json
+
+# Editors / OS
+.idea/
+*.iml
+.DS_Store
