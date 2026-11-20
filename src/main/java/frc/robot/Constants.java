@@ -58,4 +58,20 @@ public class Constants {
         public static final double kSimVerticalFovDeg = 56.2;
         public static final double kSimMaxTagDistanceMeters = 5.0;
     }
+
+    public static class Aim{
+        //"Lined Up" lights up on the dashboard when the shooter points within this many degrees of the hub center
+        public static final double kLinedUpToleranceDeg = 3;
+
+        //Which side of the robot the shooter is on, measured from the robot's front.
+        //0 = shooter on the front. Change to 180 if the shooter is on the back.
+        public static final double kShooterFacingDeg = 0;
+
+        //How hard the robot turns toward the hub while Y is held (same gains as VisionCenterAuto)
+        public static final double kHeadingP = 6;
+        public static final double kHeadingD = 0;
+
+        //Fastest the robot will spin while aiming (radians per second, 2*PI = 1 full turn per second)
+        public static final double kMaxAimRateRadPerSec = 2 * Math.PI;
+    }
 }

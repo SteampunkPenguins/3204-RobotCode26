@@ -21,7 +21,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -58,6 +57,12 @@ public class RobotContainer {
                         .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
                         .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive
                                                                                  // motors
+        /* Drive with the left stick while the robot turns to face our hub (hold driver Y) */
+        private final SwerveRequest.FieldCentricFacingAngle aimAtHub = new SwerveRequest.FieldCentricFacingAngle()
+                        .withDeadband(MaxSpeed * 0.1)
+                        .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
+                        .withHeadingPID(Constants.Aim.kHeadingP, 0, Constants.Aim.kHeadingD)
+                        .withMaxAbsRotationalRate(Constants.Aim.kMaxAimRateRadPerSec);
         private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
         private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
         private final Telemetry logger = new Telemetry(MaxSpeed);
@@ -80,15 +85,17 @@ public class RobotContainer {
         //SendableChooser<Command> m_autoChooser = new SendableChooser<>();
         SendableChooser<Command> m_autoChooserPathPlanner;
 
+        //---------- Elastic Dashboard (see Dashboard.java) ----------//
+        public final Dashboard dashboard;
+
         public RobotContainer() {
                 configureBindings();
-                
+
                 m_autoChooserPathPlanner = AutoBuilder.buildAutoChooser();
 
-                //---------- Auto Options: shown on Smart Dashboard ----------//
-
-                //SmartDashboard.putData("Auto Position", m_autoChooser);
-                SmartDashboard.putData("PathPlanner Auto Position", m_autoChooserPathPlanner);
+                //---------- Auto Options: shown on the dashboard's Autonomous tab ----------//
+                //Dashboard publishes the chooser as "Auto/Auto Chooser"
+                dashboard = new Dashboard(m_robotDrive, index, intakeArm, vision, m_autoChooserPathPlanner);
 
                 //---------- Non Path Planner Options ----------//
                 //Options are commented to ensure less data displayed on Smart Dashboard
@@ -184,8 +191,20 @@ public class RobotContainer {
                 //index forward
                 Driver.rightBumper().onTrue(index.spinIndex(0.5)).onFalse(index.spinIndex(0));
 
-                //index reverse
-                Driver.y().onTrue(index.spinIndexReverse(0.5)).onFalse(index.spinIndexReverse(0));
+                //index reverse (moved from Y to D-pad up so Y can aim at the hub)
+                Driver.povUp().onTrue(index.spinIndexReverse(0.5)).onFalse(index.spinIndexReverse(0));
+
+                //HOLD Y: turn to face our alliance's hub while still driving with the left stick.
+                //Uses the robot's position (corrected by AprilTags) to find the hub center.
+                //Back+Y and Start+Y are still SysId, so aiming is skipped while Back or Start is held.
+                Driver.y().and(Driver.back().negate()).and(Driver.start().negate())
+                        .whileTrue(m_robotDrive.applyRequest(() -> aimAtHub
+                                .withVelocityX(-Driver.getLeftY() * MaxSpeed)
+                                .withVelocityY(-Driver.getLeftX() * MaxSpeed)
+                                //the request measures angles from the driver's point of view,
+                                //so convert the field heading to the driver's perspective
+                                .withTargetDirection(HubTargeting.headingToFaceHub(m_robotDrive.getState().Pose)
+                                        .minus(m_robotDrive.getOperatorForwardDirection()))));
 
                 //shooter short range -> Best used 5-6ft..? from Hub
                 Driver.leftTrigger().onTrue(AutoCommands.Shoot(shooter, index, .65, .5))

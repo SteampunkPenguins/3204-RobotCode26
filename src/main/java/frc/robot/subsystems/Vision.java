@@ -5,7 +5,6 @@ import java.util.Optional;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.LimelightHelpers;
@@ -22,6 +21,11 @@ public class Vision extends SubsystemBase {
 
     private final CommandSwerveDrivetrain drivetrain;
     private final String name = Constants.Vision.kLimelightName;
+
+    /* Latest results, shown on the dashboard */
+    private boolean hasTarget = false;
+    private int tagCount = 0;
+    private boolean poseAccepted = false;
 
     public Vision(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
@@ -75,8 +79,26 @@ public class Vision extends SubsystemBase {
             accepted = true;
         }
 
-        SmartDashboard.putBoolean("Vision/Has Target", LimelightHelpers.getTV(name));
-        SmartDashboard.putNumber("Vision/Tag Count", estimate == null ? 0 : estimate.tagCount);
-        SmartDashboard.putBoolean("Vision/Pose Accepted", accepted);
+        // Saved for the dashboard (Dashboard.java publishes these)
+        hasTarget = LimelightHelpers.getTV(name);
+        tagCount = estimate == null ? 0 : estimate.tagCount;
+        poseAccepted = accepted;
+    }
+
+    //---------- Dashboard Accessors (read by Dashboard.java) ----------//
+
+    /** True when the Limelight sees at least one AprilTag. */
+    public boolean hasTarget() {
+        return hasTarget;
+    }
+
+    /** How many AprilTags were used in the latest pose estimate. */
+    public int getTagCount() {
+        return tagCount;
+    }
+
+    /** True when the latest vision pose was used to correct the robot's position. */
+    public boolean isPoseAccepted() {
+        return poseAccepted;
     }
 }

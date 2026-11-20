@@ -1,6 +1,5 @@
 package frc.robot.subsystems;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.revrobotics.spark.SparkMax;
@@ -14,7 +13,9 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 public class Index extends SubsystemBase{
 
     private SparkMax indexMotor = new SparkMax(Constants.Index.kIntakeIndexMotor, MotorType.kBrushless);
-    private boolean motorOn; //used for toggle method
+
+    //name of the last command that ran the Index (shown on the dashboard)
+    private String lastCaller = "";
 
     //---------- Class Instance Creation ----------//
     public static final Index instance;
@@ -35,39 +36,40 @@ public class Index extends SubsystemBase{
         indexConfig.smartCurrentLimit(Constants.kMaxCurrent);
         indexConfig.idleMode(IdleMode.kBrake); //stops motor from moving when button is not pressed
         indexMotor.configure(indexConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
-        motorOn = false;
     }
 
-    //@override and periodic() means it is always running
-    @Override
-    public void periodic() {
-        SmartDashboard.putBoolean("Index Motor On", motorOn); //words that show up on dashboard screen :D
+    //---------- Dashboard Accessors (read by Dashboard.java) ----------//
+
+    //true while the Index motor is being told to spin (either direction)
+    public boolean isRunning() {
+        return indexMotor.get() != 0;
+    }
+
+    //name of the last command that called the Index with a caller name
+    public String getLastCaller() {
+        return lastCaller;
     }
 
     //---------- Teleop Index Commands ----------//
 
     //Hold down button to spin Index motor
-    public Command spinIndex(double speed) 
+    public Command spinIndex(double speed)
     {
         return this.runOnce( () -> indexMotor.set(-speed));
     }
 
-    //Prints out on SmartDashboard if the Index Motor is called
-    public Command spinIndex(double speed,String caller) 
+    //Records who called the Index Motor so it shows on the dashboard
+    public Command spinIndex(double speed,String caller)
     {
-        SmartDashboard.putString("Index Motor Call", caller);
-        return spinIndex(speed);
+        return this.runOnce( () -> {
+            lastCaller = caller;
+            indexMotor.set(-speed);
+        });
     }
 
-    //prints out on SmartDashboard if the Index Motor is called and spins Index Motor in Reverse
-    public Command spinIndexReverse(double speed) 
+    //spins Index Motor in Reverse
+    public Command spinIndexReverse(double speed)
     {
-        if(speed != 0)
-        {
-            SmartDashboard.putBoolean("Index Motor On", true);
-        }
-        else SmartDashboard.putBoolean("Index Motor On", false);
         return this.runOnce( () -> indexMotor.set(speed));
     }
 
@@ -84,17 +86,13 @@ public class Index extends SubsystemBase{
         return this.run( () -> indexMotor.set(-autoSpeed));
     }
 
-    //prints out on SmartDashboard if the Index Motor is called during Auto
+    //Records who called the Index Motor during Auto so it shows on the dashboard
     public Command spinIndexAuto(double autoSpeed, String caller)
     {
-        //SmartDashboard.putString("Index Motor Call Auto", caller);
-        
-        if(autoSpeed != 0)
-        {
-            SmartDashboard.putBoolean("Index Motor On", true);
-        }
-        else SmartDashboard.putBoolean("Index Motor On", false);
-        return spinIndexAuto(autoSpeed);
+        return this.run( () -> {
+            lastCaller = caller;
+            indexMotor.set(-autoSpeed);
+        });
     }
 
 }

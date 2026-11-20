@@ -7,9 +7,10 @@ package frc.robot;
 import com.ctre.phoenix6.HootAutoReplay;
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.Shooter;
@@ -35,19 +36,23 @@ public class Robot extends TimedRobot {
 
     @Override
     public void robotInit() {
-        SmartDashboard.putData(CommandScheduler.getInstance());
+        // Lets Elastic download the dashboard layout from the robot:
+        // File > Load Layout From Robot (Ctrl+D), then pick elastic-layout.json
+        WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
+
+        // Start on the Autonomous tab so the drive team picks an auto first
+        m_robotContainer.dashboard.selectTab(Dashboard.kAutoTab);
     }
 
     @Override
     public void robotPeriodic() {
         m_timeAndJoystickReplay.update();
-        CommandScheduler.getInstance().run(); 
+        CommandScheduler.getInstance().run();
+        m_robotContainer.dashboard.update();
     }
 
     @Override
-    public void disabledInit() {
-        SmartDashboard.putString("Auto State", "");
-    }
+    public void disabledInit() {}
 
     @Override
     public void disabledPeriodic() {}
@@ -65,23 +70,26 @@ public class Robot extends TimedRobot {
         //Calls the Selected Path Planner Auto
         m_autonomousCommand = m_robotContainer.getPathPlannerAuto();
 
+        m_robotContainer.dashboard.selectTab(Dashboard.kAutoTab);
+
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(m_autonomousCommand);
-            SmartDashboard.putString("Auto State", "Start");
+            Dashboard.setAutoState("Running");
+        } else {
+            Dashboard.setAutoState("No auto selected");
         }
-       
+
     }
 
     @Override
     public void autonomousPeriodic() {
         //DriverStation.reportError("Report::autonomousPeriodic: Periodic()", isAutonomous());
-        //SmartDashboard.putString("Auto State", "running");
     }
 
     @Override
     public void autonomousExit() {
         DriverStation.reportWarning("Report::autonomousExit: Done", isAutonomous());
-        SmartDashboard.putString("Auto State", "end");
+        Dashboard.setAutoState("Done");
     }
 
     @Override
@@ -92,7 +100,9 @@ public class Robot extends TimedRobot {
         
         Shooter.getInstance().spinShooterZero();
         Index.getInstance().spinIndexZero();
-        SmartDashboard.putString("Auto State", "End");
+
+        // Drivers only need the Teleoperated tab from here on
+        m_robotContainer.dashboard.selectTab(Dashboard.kTeleopTab);
     }
 
     @Override
